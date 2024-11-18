@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items List</title>
+</head>
+<body>
+    <h1>Items List</h1>
+
+    <!-- Displaying the list of items -->
+    <ul id="items-list">
+        <!-- Items will be dynamically loaded here -->
+    </ul>
+
+    <h2>Add New Item</h2>
+    <!-- Form to add a new item -->
+    <form id="add-item-form">
+        <input type="text" id="item-name" placeholder="Item Name" required />
+        <input type="text" id="item-description" placeholder="Item Description" required />
+        <button type="submit">Add Item</button>
+    </form>
+
+    <script>
+        // Function to fetch and display items
+        function loadItems() {
+            fetch('/items')
+                .then(response => response.json())
+                .then(items => {
+                    const itemsList = document.getElementById('items-list');
+                    itemsList.innerHTML = ''; // Clear existing list
+
+                    items.forEach(item => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            ${item.name} - ${item.description} 
+                            <a href="#" onclick="deleteItem('${item._id}')">Delete</a>
+                        `;
+                        itemsList.appendChild(listItem);
+                    });
+                })
+                .catch(err => {
+                    console.error('Error fetching items:', err);
+                });
+        }
+
+        // Function to handle item deletion
+        function deleteItem(itemId) {
+            fetch(`/items/${itemId}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                alert('Item deleted successfully!');
+                loadItems(); // Reload the items after deletion
+            })
+            .catch(err => {
+                console.error('Error deleting item:', err);
+            });
+        }
+
+        // Handle the form submission for adding a new item
+        document.getElementById('add-item-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent the default form submission
+
+            const name = document.getElementById('item-name').value;
+            const description = document.getElementById('item-description').value;
+
+            fetch('/items', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, description })
+            })
+            .then(response => response.json())
+            .then(() => {
+                alert('Item added successfully!');
+                loadItems(); // Reload the items after adding a new one
+                document.getElementById('item-name').value = ''; // Clear the input fields
+                document.getElementById('item-description').value = '';
+            })
+            .catch(err => {
+                console.error('Error adding item:', err);
+            });
+        });
+
+        // Load items when the page loads
+        window.onload = loadItems;
+    </script>
+</body>
+</html>
